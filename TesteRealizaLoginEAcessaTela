@@ -1,0 +1,77 @@
+using Microsoft.VisualStudio.TestTools.UnitTesting;
+using OpenQA.Selenium;
+using OpenQA.Selenium.Chrome;
+using OpenQA.Selenium.Interactions;
+using OpenQA.Selenium.Support.UI;
+using System;
+using System.Configuration;
+
+namespace NovoProjeto
+{
+    [TestClass]
+    public class UnitTest1
+    {
+        IWebDriver driver;
+        WebDriverWait espera;
+
+        [TestInitialize]
+        public void Inicializar()
+        {
+            driver = new ChromeDriver(ConfigurationManager.AppSettings["DriverChrome"]); //Acessa o appconfig para abrir o driver
+            espera = new WebDriverWait(driver, TimeSpan.FromSeconds(10));  //a variável aguarda o carregamento da variável driver, e limita a espera em 10s
+            
+            driver.Manage().Window.Maximize(); // Maximiza a janela do navegador
+
+            driver.Navigate().GoToUrl(ConfigurationManager.AppSettings["URL"]); // Utilizando método appconfig
+        }
+
+        [TestMethod]
+        public void TestePagamentosConfirmados()
+        {
+            Login();
+            driver.Manage().Timeouts().ImplicitWait = TimeSpan.FromSeconds(30);
+            AbrirPagamentosConfirmados();
+        }
+
+        public void Login()
+        {
+            //IWebElement campoLogin = driver.FindElement(By.XPath("//div[@id='email']//div[@class='dx-texteditor-container']//input[@name='Email']"));  // Utiliza uma cascata para pegar todo o objeto. Deve ser utilizado caso não haja nenhum identificador único para o campo INPUT.
+            IWebElement campoEmail = driver.FindElement(By.XPath("//input[@name='Email']")); //Cria uma classe do tipo IWebElement que encontra o elemento Email dentro da variável driver.
+            campoEmail.SendKeys(ConfigurationManager.AppSettings["Email"]); //App Config
+
+            IWebElement btnProximo = driver.FindElement(By.XPath("//button[@id='btProximo']"));
+            btnProximo.Click();
+
+            driver.Manage().Timeouts().ImplicitWait = TimeSpan.FromSeconds(30); //Aguarda o elemento seguinte aparecer na tela para continuar com o fluxo.
+
+            IWebElement campoSenha = driver.FindElement(By.XPath("//input[@name='Senha']"));
+            campoSenha.SendKeys(ConfigurationManager.AppSettings["Senha"]); //App Config
+
+            IWebElement btnEntrar = driver.FindElement(By.XPath("//button[@id='btLogin']"));
+            btnEntrar.Click();
+        }
+
+        public void AbrirPagamentosConfirmados()
+        {
+            Actions acao = new Actions(driver); //Cria uma variável do tipo ação
+            IWebElement barra = driver.FindElement(By.XPath("//div[@id='kt_aside_menu']")); // o id foi pego através de copiar o XPATH.
+            acao.MoveToElement(barra).Perform();  // usa-se o moveToElement para mover o ponteiro para o elemento e utiliza-se o Perform para executar a ação
+
+            IWebElement pagamentos = driver.FindElement(By.XPath("//i[@class='kt-menu__link-icon menuSideIcon fas fa-money-check-alt']")); // Localiza o ícone de pagamentos e clica
+            pagamentos.Click();
+
+            driver.Manage().Timeouts().ImplicitWait = TimeSpan.FromSeconds(30);
+
+            IWebElement pagamentosConfirmados = driver.FindElement(By.XPath("//span[text()='Pagamentos Confirmados']")); //Localiza pelo texto exibido
+            driver.Manage().Timeouts().ImplicitWait = TimeSpan.FromSeconds(10);
+            pagamentosConfirmados.Click();
+        }
+
+        [TestCleanup]
+        public void FechaDriver()
+        {
+        }
+    }
+
+}
+
